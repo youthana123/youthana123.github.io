@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RMUTT Canteen Booking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Kanit', sans-serif;
+      background: linear-gradient(145deg, #001540, #003080);
+      color: white;
+      text-align: center;
+      transition: all 0.3s ease-in-out;
+    }
+    header {
+      background-color: #001540;
+      padding: 20px;
+      font-size: 2.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    header img {
+      width: 100px;
+      height: auto;
+    }
+    .menu-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 1.2rem;
+    }
+    .menu-container a {
+      color: white;
+      text-decoration: none;
+      margin-left: 15px;
+    }
+    .reservation-container, .table-container {
+      margin: 50px auto;
+      width: 400px;
+      padding: 25px;
+      background: white;
+      border-radius: 20px;
+      color: black;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      display: block;
+      text-align: left;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .btn.cancel {
+      background: red;
+    }
+    .seat-container, .table-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .seat, .table {
+      width: 180px; 
+      height: 90px;
+      background: green;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      color: white;
+    }
+    .seat.occupied, .table.occupied {
+      background: red;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://www.rmutt.ac.th/wp-content/uploads/2021/02/20210202-logoRMUTT-color-01.png" alt="RMUTT Logo">
+    RMUTT Canteen Booking
+  </header>
+
+  <!-- เมนูหลักที่มุมขวาบน -->
+  <div class="menu-container">
+    <a href="index.html">หน้าหลัก</a> <!-- ลิงค์นี้จะเชื่อมไปยังไฟล์ index.html -->
+  </div>
+
+  <!-- ส่วนสำหรับเลือกโต๊ะ -->
+  <div class="table-container" id="tableContainer">
+    <h3>เลือกโต๊ะ</h3>
+    <div class="table-grid" id="tableGrid"></div>
+  </div>
+
+  <!-- ส่วนสำหรับเลือกที่นั่ง -->
+  <div class="reservation-container" id="reservationContainer" style="display: none;">
+    <h3>เลือกที่นั่ง</h3>
+    <div class="seat-container" id="seatContainer"></div>
+    
+    <button class="btn" onclick="reserveSeat()">Confirm</button>
+    <button class="btn cancel" onclick="cancelReservation()">Cancel</button>
+  </div>
+
+  <!-- ส่วนสำหรับเลือกวันและเวลา -->
+  <div class="reservation-container" id="dateTimeContainer" style="display: none;">
+    <h3>เลือกวันและเวลาการจอง</h3>
+    <label>Date: <input type="date" id="resDate"></label>
+    <label>Time: <input type="time" id="resTime"></label>
+    <button class="btn" onclick="confirmReservation()">Confirm</button>
+    <button class="btn cancel" onclick="cancelReservation()">Cancel</button>
+  </div>
+
+  <script>
+    let selectedTable = null;
+    let selectedSeat = null;
+
+    // ฟังก์ชันแสดงโต๊ะที่สามารถเลือก
+    function renderTables() {
+      const container = document.getElementById("tableGrid");
+      container.innerHTML = "";
+      for (let i = 1; i <= 25; i++) {
+        const tableDiv = document.createElement("div");
+        tableDiv.className = "table";
+        tableDiv.textContent = `โต๊ะ ${i}`;
+        tableDiv.onclick = () => selectTable(i);
+        container.appendChild(tableDiv);
+      }
+    }
+
+    // ฟังก์ชันเลือกโต๊ะ
+    function selectTable(tableNumber) {
+      selectedTable = tableNumber;
+      document.getElementById("tableContainer").style.display = "none";
+      document.getElementById("reservationContainer").style.display = "block";
+      renderSeats();
+    }
+
+    // ฟังก์ชันแสดงที่นั่งที่สามารถเลือก
+    function renderSeats() {
+      const container = document.getElementById("seatContainer");
+      container.innerHTML = "";
+      for (let i = 1; i <= 8; i++) {
+        const seatDiv = document.createElement("div");
+        seatDiv.className = "seat";
+        seatDiv.textContent = `ที่นั่ง ${i}`;
+        seatDiv.onclick = () => reserveSeat(i, seatDiv);
+        container.appendChild(seatDiv);
+      }
+    }
+
+    // ฟังก์ชันเลือกที่นั่ง
+    function reserveSeat(seatNumber, seatElement) {
+      document.getElementById("reservationContainer").style.display = "none";
+      document.getElementById("dateTimeContainer").style.display = "block";
+      if (selectedSeat) {
+        alert("You can only reserve one seat.");
+        return;
+      }
+      selectedSeat = seatNumber;
+      seatElement.classList.add("occupied");
+    }
+
+    // ฟังก์ชันยืนยันการจอง
+    function confirmReservation() {
+      document.getElementById("dateTimeContainer").style.display = "none";
+      document.getElementById("reservationContainer").style.display = "block";
+      const date = document.getElementById("resDate").value;
+      const time = document.getElementById("resTime").value;
+      if (!date || !time || !selectedSeat) {
+        alert("Please select a valid date, time, and seat.");
+        return;
+      }
+      alert(`Reservation confirmed for Table ${selectedTable}, Seat ${selectedSeat} on ${date} at ${time}`);
+      
+      // กลับไปยังหน้าหลักอัตโนมัติหลังจากยืนยัน
+      setTimeout(function() {
+        window.location.href = "index.html";  // กลับไปยังหน้า index.html
+      }, 3000);  // เวลาหน่วง 3 วินาที
+    }
+
+    // ฟังก์ชันยกเลิกการจอง
+    function cancelReservation() {
+      if (!selectedSeat) {
+        alert("No reservation to cancel.");
+        return;
+      }
+      document.querySelector(".seat.occupied").classList.remove("occupied");
+      selectedSeat = null;
+      alert("Reservation cancelled");
+    }
+
+    // เรียกใช้ฟังก์ชัน renderTables เพื่อแสดงโต๊ะตอนเริ่ม
+    renderTables();
+  </script>
+</body>
+</html>
