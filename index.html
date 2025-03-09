@@ -1,166 +1,109 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Farm Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-        body {
-            background: linear-gradient(to bottom, #a8e6cf, #dcedc1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: white;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
-            transition: 0.3s;
-        }
-        h1 {
-            color: #2e7d32;
-            margin-bottom: 15px;
-            font-weight: 700;
-            font-size: 24px;
-        }
-        .status {
-            padding: 20px 10px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            gap: 15px;
-        }
-        .status-card {
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
-            width: 50%;
-            text-align: center;
-            transition: 0.3s;
-        }
-        .temperature-card {
-            background: #ffebee; 
-            color: #d32f2f; 
-        }
-        .humidity-card {
-            background: #e3f2fd; 
-            color: #1976d2; 
-        }
-        .status-card h2 {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-        .status-card p {
-            font-size: 28px;
-            font-weight: 700;
-        }
-        .button-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            margin-top: 20px;
-            gap: 10px;
-        }
-        button {
-            width: 48%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-weight: 600;
-            background: #eeeeee;
-            color: black;
-        }
-        .auto-btn { background: #4caf50; color: white; }
-        .manual-btn { background: #ff9800; color: white; }
-        .extra-btn { background: #673ab7; color: white; }
-        .extra-btn2 { background: #009688; color: white; }
-        button:hover {
-            transform: scale(1.05);
-            opacity: 0.9;
-        }
-        button:active {
-            transform: scale(0.95);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Smart Farm Dashboard</h1>
-        <img src="https://www.kasetnumchok.com/wp-content/uploads/2018/12/RECO0080-e1479978229938-1000x576-1.jpg" alt="Smart Farm" style="width:100%; border-radius:15px; margin-bottom:20px;">
-        <div class="status">
-            <div class="status-card temperature-card">
-                <h2>🌡 Temperature</h2>
-                <p id="temperature-value">--°C</p>
-            </div>
-            <div class="status-card humidity-card">
-                <h2>💧 Humidity</h2>
-                <p id="humidity-value">--%</p>
-            </div>
-        </div>
-        <div class="button-container">
-            <button class="auto-btn" id="autoBtn" onclick="toggleMode('auto')">Auto Mode</button>
-            <button class="manual-btn" id="manualBtn" onclick="toggleMode('manual')">Manual Mode</button>
-            <button class="extra-btn" id="system1Btn" onclick="controlSystem('system1')">System 1</button>
-            <button class="extra-btn2" id="system2Btn" onclick="controlSystem('system2')">System 2</button>
-        </div>
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { motion } from "framer-motion";
+
+export default function Dashboard() {
+  const [temperature, setTemperature] = useState(0);
+  const [humidity, setHumidity] = useState(0);
+  const [autoMode, setAutoMode] = useState(true);
+  const [fanStatus, setFanStatus] = useState(false);
+  const [waterStatus, setWaterStatus] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("https://api.thinger.io/v2/users/YOUR_USERNAME/devices/YOUR_DEVICE", {
+          headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+        });
+        const data = await response.json();
+        setTemperature(data.temperature);
+        setHumidity(data.humidity);
+        setHistory((prev) => [...prev, { time: new Date().toLocaleTimeString(), temp: data.temperature, hum: data.humidity }].slice(-10));
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const toggleFan = async () => {
+    setFanStatus(!fanStatus);
+    await fetch("https://api.thinger.io/v2/users/YOUR_USERNAME/devices/YOUR_DEVICE/fan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+      body: JSON.stringify({ value: !fanStatus }),
+    });
+  };
+
+  const toggleWater = async () => {
+    setWaterStatus(!waterStatus);
+    await fetch("https://api.thinger.io/v2/users/YOUR_USERNAME/devices/YOUR_DEVICE/water", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+      body: JSON.stringify({ value: !waterStatus }),
+    });
+  };
+
+  return (
+    <div className="p-4 md:p-6 grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto bg-gradient-to-r from-green-200 via-blue-200 to-purple-200 min-h-screen">
+      <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}>
+        <Card className="bg-gradient-to-br from-yellow-400 to-red-500 text-white shadow-xl transform hover:rotate-3">
+          <CardContent className="p-6 text-center">
+            <h2 className="text-2xl font-bold">🌡️ Temperature</h2>
+            <p className="text-5xl font-extrabold drop-shadow-xl">{temperature}°C</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+      <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}>
+        <Card className="bg-gradient-to-br from-teal-400 to-blue-500 text-white shadow-xl transform hover:-rotate-3">
+          <CardContent className="p-6 text-center">
+            <h2 className="text-2xl font-bold">💧 Humidity</h2>
+            <p className="text-5xl font-extrabold drop-shadow-xl">{humidity}%</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+      <Card className="bg-gradient-to-br from-gray-700 to-gray-900 text-white shadow-xl">
+        <CardContent className="p-6 text-center">
+          <h2 className="text-2xl font-bold">🤖 Auto Mode</h2>
+          <Switch checked={autoMode} onCheckedChange={setAutoMode} />
+        </CardContent>
+      </Card>
+      <Card className="bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-xl">
+        <CardContent className="p-6 text-center">
+          <h2 className="text-2xl font-bold">🌀 Fan</h2>
+          <Button onClick={toggleFan} className="shadow-md hover:shadow-xl transition-shadow duration-300">
+            {fanStatus ? "Turn Off" : "Turn On"}
+          </Button>
+        </CardContent>
+      </Card>
+      <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl">
+        <CardContent className="p-6 text-center">
+          <h2 className="text-2xl font-bold">💦 Water System</h2>
+          <Button onClick={toggleWater} className="shadow-md hover:shadow-xl transition-shadow duration-300">
+            {waterStatus ? "Turn Off" : "Turn On"}
+          </Button>
+        </CardContent>
+      </Card>
+      <Card className="col-span-1 md:col-span-2 lg:col-span-3 bg-white bg-opacity-70 backdrop-blur-md shadow-xl">
+        <CardContent className="p-6">
+          <h2 className="text-2xl font-bold text-center mb-4">📈 Temperature & Humidity Trends</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={history}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#aaa" />
+              <XAxis dataKey="time" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="temp" stroke="#ff7300" strokeWidth={3} dot={{ stroke: '#ff7300', strokeWidth: 2 }} />
+              <Line type="monotone" dataKey="hum" stroke="#0088ff" strokeWidth={3} dot={{ stroke: '#0088ff', strokeWidth: 2 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
     </div>
-
-    <script>
-        function updateData() {
-            fetch('https://api.thinger.io/v3/users/YOUR_USER/devices/YOUR_DEVICE')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('temperature-value').textContent = data.temperature ? data.temperature + '°C' : '--°C';
-                    document.getElementById('humidity-value').textContent = data.humidity ? data.humidity + '%' : '--%';
-                })
-                .catch(error => console.error('Error fetching data:', error));
-        }
-
-        function toggleMode(mode) {
-            fetch(`https://api.thinger.io/v3/users/YOUR_USER/devices/YOUR_DEVICE/mode`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode })
-            })
-            .then(() => {
-                let button = document.getElementById(mode === 'auto' ? 'autoBtn' : 'manualBtn');
-                button.textContent = button.textContent.includes('On') ? button.textContent.replace(' On', '') : button.textContent + ' On';
-            })
-            .catch(error => console.error('Error setting mode:', error));
-        }
-
-        function controlSystem(system) {
-            fetch(`https://api.thinger.io/v3/users/YOUR_USER/devices/YOUR_DEVICE/${system}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'toggle' })
-            })
-            .then(() => {
-                let button = document.getElementById(system === 'system1' ? 'system1Btn' : 'system2Btn');
-                button.textContent = button.textContent.includes('On') ? button.textContent.replace(' On', '') : button.textContent + ' On';
-            })
-            .catch(error => console.error('Error controlling system:', error));
-        }
-
-        setInterval(updateData, 5000);
-    </script>
-</body>
-</html>
+  );
+}
