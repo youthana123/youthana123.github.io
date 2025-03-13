@@ -1,109 +1,96 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { motion } from "framer-motion";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.5/axios.min.js"></script>
+</head>
+<body id="body" class="bg-gradient-to-br from-indigo-600 to-purple-600 h-screen flex justify-center items-center p-4 transition-all duration-500">
 
-export default function Dashboard() {
-  const [temperature, setTemperature] = useState(0);
-  const [humidity, setHumidity] = useState(0);
-  const [autoMode, setAutoMode] = useState(true);
-  const [fanStatus, setFanStatus] = useState(false);
-  const [waterStatus, setWaterStatus] = useState(false);
-  const [history, setHistory] = useState([]);
+    <div class="glassmorphism p-6 rounded-3xl w-full max-w-sm shadow-lg text-center">
+        <h1 class="text-white text-2xl font-bold mb-4">🔊 Sound Monitor</h1>
+        
+        <p class="text-white text-lg">Current Sound Level:</p>
+        <p id="soundLevel" class="text-4xl font-bold text-white transition-all duration-500">-- dB</p>
+        
+        <div class="w-full bg-gray-300 rounded-full h-4 my-3 relative">
+            <div id="soundBar" class="bg-green-500 h-4 rounded-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("https://api.thinger.io/v2/users/YOUR_USERNAME/devices/YOUR_DEVICE", {
-          headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
-        });
-        const data = await response.json();
-        setTemperature(data.temperature);
-        setHumidity(data.humidity);
-        setHistory((prev) => [...prev, { time: new Date().toLocaleTimeString(), temp: data.temperature, hum: data.humidity }].slice(-10));
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, []);
+        <p class="text-white text-lg mt-2">Threshold:</p>
+        <p id="threshold" class="text-4xl font-bold text-white transition-all duration-500">-- dB</p>
 
-  const toggleFan = async () => {
-    setFanStatus(!fanStatus);
-    await fetch("https://api.thinger.io/v2/users/YOUR_USERNAME/devices/YOUR_DEVICE/fan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer YOUR_ACCESS_TOKEN" },
-      body: JSON.stringify({ value: !fanStatus }),
-    });
-  };
-
-  const toggleWater = async () => {
-    setWaterStatus(!waterStatus);
-    await fetch("https://api.thinger.io/v2/users/YOUR_USERNAME/devices/YOUR_DEVICE/water", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer YOUR_ACCESS_TOKEN" },
-      body: JSON.stringify({ value: !waterStatus }),
-    });
-  };
-
-  return (
-    <div className="p-4 md:p-6 grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto bg-gradient-to-r from-green-200 via-blue-200 to-purple-200 min-h-screen">
-      <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}>
-        <Card className="bg-gradient-to-br from-yellow-400 to-red-500 text-white shadow-xl transform hover:rotate-3">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-2xl font-bold">🌡️ Temperature</h2>
-            <p className="text-5xl font-extrabold drop-shadow-xl">{temperature}°C</p>
-          </CardContent>
-        </Card>
-      </motion.div>
-      <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 300 }}>
-        <Card className="bg-gradient-to-br from-teal-400 to-blue-500 text-white shadow-xl transform hover:-rotate-3">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-2xl font-bold">💧 Humidity</h2>
-            <p className="text-5xl font-extrabold drop-shadow-xl">{humidity}%</p>
-          </CardContent>
-        </Card>
-      </motion.div>
-      <Card className="bg-gradient-to-br from-gray-700 to-gray-900 text-white shadow-xl">
-        <CardContent className="p-6 text-center">
-          <h2 className="text-2xl font-bold">🤖 Auto Mode</h2>
-          <Switch checked={autoMode} onCheckedChange={setAutoMode} />
-        </CardContent>
-      </Card>
-      <Card className="bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-xl">
-        <CardContent className="p-6 text-center">
-          <h2 className="text-2xl font-bold">🌀 Fan</h2>
-          <Button onClick={toggleFan} className="shadow-md hover:shadow-xl transition-shadow duration-300">
-            {fanStatus ? "Turn Off" : "Turn On"}
-          </Button>
-        </CardContent>
-      </Card>
-      <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl">
-        <CardContent className="p-6 text-center">
-          <h2 className="text-2xl font-bold">💦 Water System</h2>
-          <Button onClick={toggleWater} className="shadow-md hover:shadow-xl transition-shadow duration-300">
-            {waterStatus ? "Turn Off" : "Turn On"}
-          </Button>
-        </CardContent>
-      </Card>
-      <Card className="col-span-1 md:col-span-2 lg:col-span-3 bg-white bg-opacity-70 backdrop-blur-md shadow-xl">
-        <CardContent className="p-6">
-          <h2 className="text-2xl font-bold text-center mb-4">📈 Temperature & Humidity Trends</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={history}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#aaa" />
-              <XAxis dataKey="time" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="temp" stroke="#ff7300" strokeWidth={3} dot={{ stroke: '#ff7300', strokeWidth: 2 }} />
-              <Line type="monotone" dataKey="hum" stroke="#0088ff" strokeWidth={3} dot={{ stroke: '#0088ff', strokeWidth: 2 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        <div class="flex justify-between mt-6">
+            <button onclick="changeThreshold(-1)" class="bg-red-500 px-5 py-3 rounded-full text-white shadow-lg transition-all hover:bg-red-700 active:scale-90">➖</button>
+            <button onclick="changeThreshold(1)" class="bg-green-500 px-5 py-3 rounded-full text-white shadow-lg transition-all hover:bg-green-700 active:scale-90">➕</button>
+        </div>
     </div>
-  );
-}
+
+    <style>
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+
+    <script>
+        const thingerUsername = "Yout45";
+        const deviceId = "Biology";
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJCaW9sb2d5Iiwic3ZyIjoiYXAtc291dGhlYXN0LmF3cy50aGluZ2VyLmlvIiwidXNyIjoiWW91dDQ1In0.znfLGQgpspAlXyIrDR-hgDsIDj0Ci2hkHxJPy3a37D4";
+        const apiUrl = `https://api.thinger.io/v3/users/${thingerUsername}/devices/${deviceId}/resources/sound_sensor`;
+        const thresholdApiUrl = `https://api.thinger.io/v3/users/${thingerUsername}/devices/${deviceId}/resources/set_threshold`;
+        let currentThreshold = 50;
+
+        async function fetchSoundData() {
+            try {
+                const res = await axios.get(apiUrl, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                
+                if (!res.data || res.data.sound_level === undefined || res.data.threshold === undefined) {
+                    throw new Error("Invalid response format");
+                }
+
+                const soundLevel = parseFloat(res.data.sound_level).toFixed(1);
+                currentThreshold = parseFloat(res.data.threshold).toFixed(1);
+                document.getElementById("soundLevel").innerText = soundLevel + " dB";
+                document.getElementById("threshold").innerText = currentThreshold + " dB";
+                
+                let barWidth = Math.min((soundLevel / 100) * 100, 100); 
+                document.getElementById("soundBar").style.width = barWidth + "%";
+
+                if (parseFloat(soundLevel) >= parseFloat(currentThreshold)) {
+                    document.getElementById("body").classList.remove("from-indigo-600", "to-purple-600");
+                    document.getElementById("body").classList.add("from-red-600", "to-red-800");
+                } else {
+                    document.getElementById("body").classList.remove("from-red-600", "to-red-800");
+                    document.getElementById("body").classList.add("from-indigo-600", "to-purple-600");
+                }
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            }
+        }
+
+        async function changeThreshold(value) {
+            currentThreshold = Math.max(0, Math.min(100, parseFloat(currentThreshold) + value));
+            try {
+                await axios.put(thresholdApiUrl, { in: currentThreshold }, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                fetchSoundData();
+            } catch (err) {
+                console.error("Error updating threshold:", err);
+            }
+        }
+
+        setInterval(fetchSoundData, 2000);
+        fetchSoundData();
+    </script>
+
+</body>
+</html>
