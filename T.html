@@ -306,7 +306,7 @@
                 const response = await fetch('https://backend.thinger.io/v3/users/Yout45/devices/Tarn/resources/temp_data', {
                     method: 'GET',
                     headers: {
-                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjIwNTg0MTEsImlhdCI6MTc2MjA1MTIxMSwicm9sZSI6InVzZXIiLCJ1c3IiOiJZb3V0NDUifQ.5olafdJUHsvTD1dQMwksUoP1aw8DBO4KuEHumxF4Vv4',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjIxNzI3NDYsImlhdCI6MTc2MjE2NTU0Niwicm9sZSI6InVzZXIiLCJ1c3IiOiJZb3V0NDUifQ.Pw0WDeOi4A3MG2bEr11aXEZXInuYfwQy9oCgvlft52Q',
                         'Content-Type': 'application/json'
                     }
                 });
@@ -424,7 +424,7 @@
             }
         }
 
-        // อัพเดตข้อมูลทุก 5 วินาที
+        // อัพเดตข้อมูลทุก 5 วินาที (ปรับจาก 200ms เป็น 5000ms)
         setInterval(updateData, 5000);
         
         // อัพเดตข้อมูลทันทีเมื่อโหลดหน้าเว็บ
